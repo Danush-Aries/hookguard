@@ -1,0 +1,19 @@
+# Binaries
+/hookguard
+/bin/
+/dist/
+
+# Coverage
+*.out
+coverage.*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+
+# Go
+vendor/
