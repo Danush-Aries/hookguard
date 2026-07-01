@@ -1,0 +1,64 @@
+name: 'hookguard scan'
+description: 'Static security scan of .claude/settings.json and referenced hook scripts. Fails on high/critical findings.'
+author: 'Danush-Aries'
+branding:
+  icon: 'shield'
+  color: 'red'
+
+inputs:
+  path:
+    description: 'Directory to scan (default: repo root).'
+    required: false
+    default: '.'
+  version:
+    description: 'hookguard release tag to install (default: latest).'
+    required: false
+    default: 'latest'
+  fail-on:
+    description: 'Minimum severity that fails the job (info|low|medium|high|critical).'
+    required: false
+    default: 'high'
+  json-artifact:
+    description: 'If set, write a JSON report to this path and upload it as an artifact.'
+    required: false
+    default: ''
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install hookguard
+      shell: bash
+      run: |
+        set -euo pipefail
+        VERSION="${{ inputs.version }}"
+        OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
+        ARCH_RAW="$(uname -m)"
+        case "$ARCH_RAW" in
+          x86_64|amd64) ARCH=x86_64 ;;
+          aarch64|arm64) ARCH=arm64 ;;
+          *) echo "unsupported arch: $ARCH_RAW"; exit 1 ;;
+        esac
+        if [ "$VERSION" = "latest" ]; then
+          VERSION="$(curl -sSL https://api.github.com/repos/Danush-Aries/hookguard/releases/latest | grep -oE '"tag_name":\s*"[^"]+"' | head -1 | cut -d'"' -f4)"
+        fi
+        VERSION_NO_V="${VERSION#v}"
+        URL="https://github.com/Danush-Aries/hookguard/releases/download/${VERSION}/hookguard_${VERSION_NO_V}_${OS}_${ARCH}.tar.gz"
+        echo "Downloading $URL"
+        TMP="$(mktemp -d)"
+        curl -sSL "$URL" | tar -xz -C "$TMP"
+        install -m 0755 "$TMP/hookguard" /usr/local/bin/hookguard
+        hookguard version
+
+    - name: Run hookguard scan
+      shell: bash
+      run: |
+        set +e
+        if [ -n "${{ inputs.json-artifact }}" ]; then
+          hookguard scan --json --fail-on "${{ inputs.fail-on }}" "${{ inputs.path }}" | tee "${{ inputs.json-artifact }}"
+          rc=${PIPESTATUS[0]}
+        else
+          hookguard scan --fail-on "${{ inputs.fail-on }}" "${{ inputs.path }}"
+          rc=$?
+        fi
+        echo "hookguard exit code: $rc"
+        exit $rc
