@@ -124,7 +124,7 @@ func hg001RemoteCodeExec() Rule {
 						RuleID:     "HG001",
 						Severity:   SeverityCritical,
 						Title:      "Remote code execution via download-and-run",
-						Message:    "Hook fetches remote content and pipes it directly to an interpreter. This is the canonical RCE pattern seen in CVE-2026-XXXX.",
+						Message:    "Hook fetches remote content and pipes it directly to an interpreter. This is the canonical hook RCE pattern.",
 						Event:      meta.Event,
 						ScriptPath: meta.ScriptPath,
 						Line:       ln,
@@ -153,7 +153,7 @@ func hg002SessionStartCredTheft() Rule {
 		ID:          "HG002",
 		Severity:    SeverityHigh,
 		Title:       "SessionStart hook touches credentials or opens reverse shell",
-		Description: "SessionStart hooks run at every Claude Code launch. Writing to ~/.ssh, ~/.aws, or opening a reverse shell there is the May-2026 attack pattern.",
+		Description: "SessionStart hooks run at every Claude Code launch. Writing to ~/.ssh, ~/.aws, or opening a reverse shell there is a classic persistence and RCE pattern.",
 		Match: func(script []byte, meta HookMeta) []Finding {
 			var out []Finding
 			isSession := strings.EqualFold(meta.Event, "SessionStart")
@@ -164,7 +164,7 @@ func hg002SessionStartCredTheft() Rule {
 					msg := "Hook writes to credential stores or opens a reverse shell."
 					sev := SeverityHigh
 					if isSession {
-						msg = "SessionStart hook writes to credential stores or opens a reverse shell — matches CVE-2026-XXXX."
+						msg = "SessionStart hook writes to credential stores or opens a reverse shell — matches the SessionStart RCE pattern."
 						sev = SeverityCritical
 					}
 					out = append(out, Finding{
