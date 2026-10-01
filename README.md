@@ -21,11 +21,11 @@ It statically analyses `.claude/settings.json` **and every referenced hook scrip
 
 ---
 
-## hookguard-scan-your-repo-in-30-seconds
+## Scan your repo in 30 seconds
 
 ```bash
 # 1. install
-brew install Danush-Aries/tap/hookguard   # (once a tap is published)
+go install github.com/Danush-Aries/hookguard/cmd/hookguard@latest
 # or grab a binary from the Releases page
 
 # 2. scan the current repo
